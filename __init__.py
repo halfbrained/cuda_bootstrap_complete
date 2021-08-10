@@ -79,12 +79,13 @@ class Command:
 
             import cuda_project_man as p
 
-            _pvars = p.global_project_info['vars']
-            # find my versions option string
-            ver_op_str = next(filter(lambda s: s.startswith(PROJ_VERSIONS+'='), _pvars), None)
-            if ver_op_str:
-                val_str = ver_op_str[len(PROJ_VERSIONS)+1:]
-                return list(map(int, val_str.split(',')))
+            _pvars = p.global_project_info.get('vars')
+            if _pvars is not None:
+                # find my versions option string
+                ver_op_str = next(filter(lambda s: s.startswith(PROJ_VERSIONS+'='), _pvars), None)
+                if ver_op_str:
+                    val_str = ver_op_str[len(PROJ_VERSIONS)+1:]
+                    return list(map(int, val_str.split(',')))
 
         return opt_versions
 
@@ -106,7 +107,10 @@ class Command:
             if res is None:
                 return
 
-            vars_ = p.global_project_info['vars']
+            vars_ = p.global_project_info.get('vars')
+            if vars_ is None:
+                msg_status(_('No project opened'))
+                return
 
             # remove old value
             vers_ind = next((i for i,s in enumerate(vars_)  if s.startswith(PROJ_VERSIONS+'=') ), None)
