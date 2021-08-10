@@ -96,38 +96,20 @@ class Command:
 
         import cuda_project_man as p
 
-        proj_fn = p.global_project_info.get('filename')
-        if proj_fn:
-
-            _label = 'Bootstrap versions for current project:\n  (a comma-separated string of integers)'
-            res = dlg_input(_(_label),  ','.join(map(str, self.get_versions())))
-            if res is None:
-                return
-
+        if p.global_project_info.get('filename'):
             vars_ = p.global_project_info.get('vars')
-            if vars_ is None:
-                msg_status(_('No project opened'))
+            # open project properties window if option is already present
+            if vars_  and  any(s.startswith(PROJ_VERSIONS+'=') for s in vars_):
+                app_proc(PROC_EXEC_PLUGIN, 'cuda_project_man,config_proj,')
                 return
 
-            # remove old value
-            vers_ind = next((i for i,s in enumerate(vars_)  if s.startswith(PROJ_VERSIONS+'=') ), None)
-            if vers_ind is not None:
-                del vars_[vers_ind]
-
-            if res == '':   # empty value -- abort
-                app_proc(PROC_EXEC_PLUGIN, 'cuda_project_man,action_save_project_as,'+proj_fn)
-                return
-
-            # validate versions input
-            try:
-                list(map(int, res.split(',') ))
-            except Exception:
-                print('NOTE: '+_('Invalid versions string. Should be a comma-separated string of integers'))
-                return
-
-            vars_.append(PROJ_VERSIONS +'='+ res)
-            app_proc(PROC_EXEC_PLUGIN, 'cuda_project_man,action_save_project_as,'+proj_fn)
-
+            _msg = 'To set project versions - add the following option to the project properties:\n' \
+                    '  bootstrap_complete_versions=<versions>\n\n' \
+                    'Replace <versions> with a comma-separated string of integers'
+            res = msg_box(_(_msg), MB_OKCANCEL + MB_ICONINFO)
+            if res == ID_OK:
+                # open project properties window
+                app_proc(PROC_EXEC_PLUGIN, 'cuda_project_man,config_proj,')
         else:
             msg_status(_('No project opened'))
 
