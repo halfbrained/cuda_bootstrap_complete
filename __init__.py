@@ -131,10 +131,6 @@ class Command:
     def on_complete(self, ed_self):
         """ shows completion dialog: `ed_self.complete_alt()`
         """
-        lex = ed_self.get_prop(PROP_LEXER_FILE)
-        if not lex  or  not lex.startswith('HTML'):
-            return
-
         pass;       LOG and print(f'- bstrap compelte')
         carets = ed_self.get_carets()
         if not all(c[3]==-1 for c in carets):   # abort if selection
