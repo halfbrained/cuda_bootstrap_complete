@@ -64,7 +64,10 @@ class Command:
         pass;       LOG and print(f'--- bstrap: get compeltion items for: {prefix, versions}')
         it = iter(self.comp_items)
         while True:
-            ver, val = next(it), next(it)
+            ver = next(it, None)
+            if ver is None:
+                return
+            val = next(it)
             if ver in versions  and  val.startswith(prefix):
                 yield val
 
