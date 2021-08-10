@@ -3,7 +3,7 @@ title=Bootstrap Completion
 desc=Completion for Bootstrap classes
 type=cudatext-plugin
 subdir=cuda_bootstrap_complete
-homepage=(Fill the GitHub repo URL)
+homepage=https://github.com/halfbrained/cuda_bootstrap_complete
 
 [item1]
 section=events
