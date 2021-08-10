@@ -1,0 +1,23 @@
+[info]
+title=Bootstrap Completion
+desc=Completion for Bootstrap classes
+type=cudatext-plugin
+subdir=cuda_bootstrap_complete
+homepage=(Fill the GitHub repo URL)
+
+[item1]
+section=events
+lexers=HTML
+events=on_complete++,on_snippet
+
+[item100]
+section=commands
+caption=Bootstrap Completion\Config
+method=config
+menu=o
+
+[item101]
+section=commands
+caption=Bootstrap Completion\Project specific config
+method=config_proj
+menu=o
