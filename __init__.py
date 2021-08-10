@@ -48,13 +48,10 @@ class Command:
     @property
     def comp_items(self):
         if self._data is None:
-            with open(fn_db, 'r', encoding='utf-8') as f:
-                # flatten > [ver,str, ver,str, ...]
-                data = []
-                for item in _json_loads(f.read()):
-                    data.append(int(item[0]))     # version to int
-                    data.append(item[1])      # completion string
-            self._data = data
+
+            from .completion_db import DATA
+
+            self._data = DATA
         return self._data
 
     def get_items(self, prefix, versions):
