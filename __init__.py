@@ -7,7 +7,7 @@ from cudax_lib import get_translation, _json_loads
 
 _   = get_translation(__file__)  # I18N
 
-CompCfg = namedtuple('CompCfg', 'word_prefix word_range attr_range')
+CompCfg = namedtuple('CompCfg', 'word_prefix word_range attr_range spaced_l spaced_r')
 
 
 LOG = False
@@ -149,6 +149,7 @@ class Command:
         # possble prefixes set: single empty, single, multiple
         prefixes = {cfg.word_prefix for cfg in comp_cfgs}
         _prefix = next(iter(prefixes))  if len(prefixes) == 1 else  ''
+        # completion items
         items = list(set( self.get_items(_prefix, set(self.get_versions())) ))
         if not items:
             pass;       LOG and print(f'.no matching completion: `{_prefix}*`')
@@ -192,6 +193,8 @@ def _complete(ed_self, snippet_text, comp_cfg, replace_attr=False):
     if replace_attr:
         return ed_self.replace(*comp_cfg.attr_range, snippet_text)
     else:
+        if   not comp_cfg.spaced_l:   snippet_text = ' '+snippet_text
+        elif not comp_cfg.spaced_r:   snippet_text = snippet_text+' '
         return ed_self.replace(*comp_cfg.word_range, snippet_text)
 
 
@@ -230,9 +233,13 @@ def _get_caret_completion_cfg(ed_self, caret):
     elif class_name_x1 == len(line_):   class_name_x0 = class_name_x1   # at end of word
 
     prefix = line_[class_name_x0:]
-    range_ = (class_name_x0,y,  class_name_x1,y)
+    word_range = (class_name_x0,y,  class_name_x1,y)
     attr_range = (x_attr_x0,y, x_attr_x1,y)
-    return CompCfg(word_prefix=prefix, word_range=range_, attr_range=attr_range)
+    # check if have space or quote to the left or right
+    spaced_l = line[class_name_x0-1] in CLASS_SEP
+    spaced_r = class_name_x1 == len(line)  or  line[class_name_x1] in CLASS_SEP
+    return CompCfg(word_prefix=prefix, word_range=word_range, attr_range=attr_range,
+                    spaced_l=spaced_l, spaced_r=spaced_r)
 
 
 class InvalidCaretException(Exception):
