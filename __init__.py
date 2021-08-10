@@ -230,7 +230,6 @@ def _get_caret_completion_cfg(ed_self, caret):
 
     # if at the edge of word - make zero-len range
     if class_name_x0 == len(line_):     class_name_x1 = class_name_x0   # at start of word
-    elif class_name_x1 == len(line_):   class_name_x0 = class_name_x1   # at end of word
 
     prefix = line_[class_name_x0:]
     word_range = (class_name_x0,y,  class_name_x1,y)
