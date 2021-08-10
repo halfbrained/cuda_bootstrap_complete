@@ -7,7 +7,6 @@ homepage=https://github.com/halfbrained/cuda_bootstrap_complete
 
 [item1]
 section=events
-lexers=HTML
 events=on_complete++,on_snippet
 
 [item100]
