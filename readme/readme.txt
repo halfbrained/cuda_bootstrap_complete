@@ -10,5 +10,5 @@ with the chosen item.
 Author: halfbrained (https://github.com/halfbrained)
 Credits: 
   Plugin uses completion data from Sublime Text plugin:
-  https://github.com/jfcherng-sublime/ST-Bootstrap
+  https://github.com/jfcherng-sublime/ST-BootstrapAutocomplete
 License: MIT
