@@ -15,7 +15,7 @@ LOG = False
 fn_config = os.path.join(app_path(APP_DIR_SETTINGS), 'plugins.ini')
 fn_db = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'completion-db.json')
 
-CFG_SECTION = ""
+CFG_SECTION = "bootstrap_complete"
 PROJ_VERSIONS = 'bootstrap_complete_versions'
 PREFIX = 'class="'
 CLASS_SEP = {'"',  '\x09', '\x0a', '\x0c', '\x0d', '\x20'} # https://infra.spec.whatwg.org/#ascii-whitespace
