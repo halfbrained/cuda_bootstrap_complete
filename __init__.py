@@ -230,7 +230,6 @@ def _get_caret_completion_cfg(ed_self, caret):
         spaced_l = spaced_r = True
         #print(f' --- match -- empty range')
     else:       # attr is populated
-        line_,_line = line[:x],line[x:]
         class_name_x0 = next((i for i in range(x-1, gx0-1, -1) if line[i] in CLASS_SEP), gx0-1) + 1
         class_name_x1 = next((i for i in range(x, gx1)  if line[i] in CLASS_SEP), gx1)
         #print(f' --- match -- class_name: {line[:class_name_x0], line[class_name_x0:x], line[x:class_name_x1], class_name_x0, class_name_x1, }')
