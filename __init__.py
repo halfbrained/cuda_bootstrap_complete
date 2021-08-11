@@ -103,9 +103,10 @@ class Command:
                 app_proc(PROC_EXEC_PLUGIN, 'cuda_project_man,config_proj,')
                 return
 
-            _msg = 'To set project versions - add the following option to the project properties:\n' \
+            _msg = 'To set Bootstrap versions per project, add the following option to the Project Properties dialog:\n' \
                     '  bootstrap_complete_versions=<versions>\n\n' \
-                    'Replace <versions> with a comma-separated string of integers'
+                    'Where <versions> is a comma-separated string of integers.\n'\
+                    'Press OK to open the Project Properties dialog now.'
             res = msg_box(_(_msg), MB_OKCANCEL + MB_ICONINFO)
             if res == ID_OK:
                 # open project properties window
