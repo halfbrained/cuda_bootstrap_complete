@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import re
 from collections import namedtuple
 from cudatext import *
 from cudax_lib import get_translation, _json_loads
@@ -17,9 +18,12 @@ fn_db = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'completion-db
 
 CFG_SECTION = "bootstrap_complete"
 PROJ_VERSIONS = 'bootstrap_complete_versions'
-PREFIX = 'class="'
-CLASS_SEP = {'"',  '\x09', '\x0a', '\x0c', '\x0d', '\x20'} # https://infra.spec.whatwg.org/#ascii-whitespace
+# https://infra.spec.whatwg.org/#ascii-whitespace
+CLASS_SEP = {'"',  "'",  '\x09', '\x0a', '\x0c', '\x0d', '\x20'}
 SNIP_ID = 'strap_snip'
+# 5 groups - attributes
+# ^ first - all combined, + two - quoted, + unquoted name present, + unquoted empty
+CLASS_ATTR_PTRN = re.compile('\\bclass=("([^"]*)|\'([^\']*)|(\w[^\s>]*)|())')
 
 opt_versions = [4]  # default, when project versions is missing
 
@@ -187,6 +191,8 @@ def _set_carets(ed_self, carets):
         ed_self.set_caret(*caret, id=CARET_ADD, options=CARET_OPTION_NO_SCROLL)
 
 
+prefix_len = len('class=')
+
 def _get_caret_completion_cfg(ed_self, caret):
     """ returns `ConpCfg` -- info about what to be replaced with completion on specified caret position
         raises `InvalidCaretException` if caret position cannot be processed
@@ -196,32 +202,52 @@ def _get_caret_completion_cfg(ed_self, caret):
     if x > len(line):
         raise InvalidCaretException("Caret is beyond text")
 
-    line_,_line = line[:x],line[x:]
-    x_attr_start = line_.rfind(PREFIX)
-    if x_attr_start == -1:
+    for m in CLASS_ATTR_PTRN.finditer(line):
+        start,end = m.span(0)
+        #print(f' -- match: {(start, x, end), m}')
+        if start <= x <= end: # TODO test
+            if x-start >= prefix_len:
+                # found match range for caret - `m`
+                break
+            else:
+                raise InvalidCaretException("Caret is outside of class attribute 2")
+    else:
         raise InvalidCaretException("Caret is outside of class attribute 1")
-    x_attr_x0 = x_attr_start + len(PREFIX)
-    _attr_2_end = _line.find('"')
-    x_attr_x1 = len(line)  if _attr_2_end == -1 else  len(line_)+_attr_2_end
 
-    # abort if there is `"` between caret and class-attribute-value-start
-    if line_.find('"', x_attr_x0) != -1:
-        raise InvalidCaretException(f"Caret is outside of class attribute 2")
+    #print(f' -- success match: {m, m.groups()}')
 
-    class_name_x0 = next(i for i,ch in r_enumerate(line_) if ch in CLASS_SEP) + 1
-    class_name_x1 = next((i for i,ch in enumerate(_line)  if ch in CLASS_SEP), len(_line)) + len(line_)
+    # verify caret in matched attribute span
+    attr_val = m[1]
+    gx0,gx1 = m.span(1)
+    #print(f' -- match attrr: span {m.span(1), attr_val}, caret: {x}')
 
-    # if at the edge of word - make zero-len range
-    if class_name_x0 == len(line_):     class_name_x1 = class_name_x0   # at start of word
+    if not (gx0 <= x <= gx1):
+        raise InvalidCaretException("Caret is outside of attribute value")
 
-    prefix = line_[class_name_x0:]
-    word_range = (class_name_x0,y,  class_name_x1,y)
-    attr_range = (x_attr_x0,y, x_attr_x1,y)
-    # check if have space or quote to the left or right
-    spaced_l = line[class_name_x0-1] in CLASS_SEP
-    spaced_r = class_name_x1 == len(line)  or  line[class_name_x1] in CLASS_SEP
-    return CompCfg(word_prefix=prefix, word_range=word_range, attr_range=attr_range,
+    if not attr_val:    # empty attr value, quoted or not
+        prefix = ''
+        word_range = attr_range = (gx0,y, gx1,y)  # empty range
+        spaced_l = spaced_r = True
+        #print(f' --- match -- empty range')
+    else:       # attr is populated
+        line_,_line = line[:x],line[x:]
+        class_name_x0 = next((i for i in range(x-1, gx0-1, -1) if line[i] in CLASS_SEP), gx0-1) + 1
+        class_name_x1 = next((i for i in range(x, gx1)  if line[i] in CLASS_SEP), gx1)
+        #print(f' --- match -- class_name: {line[:class_name_x0], line[class_name_x0:x], line[x:class_name_x1], class_name_x0, class_name_x1, }')
+
+        # if unquoted class name present - replace it -- no spacing
+        if class_name_x0 == x  and  attr_val[0] in {'"', "'"}:  class_name_x1 = class_name_x0
+
+        prefix = line[class_name_x0:x]
+        word_range = (class_name_x0,y,  class_name_x1,y)
+        attr_range = (gx0,y, gx1,y)
+        spaced_l = True    # never a need for spacing to left?
+        spaced_r = x == gx1  or  class_name_x1 == gx1  or  line[class_name_x1] in CLASS_SEP
+
+    cc = CompCfg(word_prefix=prefix, word_range=word_range, attr_range=attr_range,
                     spaced_l=spaced_l, spaced_r=spaced_r)
+    pass;       LOG and print(f'NOTE: comp cfg: {cc}')
+    return cc
 
 
 def _merge_item_versions(comp_items):
