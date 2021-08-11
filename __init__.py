@@ -66,7 +66,7 @@ class Command:
                 return
             val = next(it)
             if ver in versions  and  val.startswith(prefix):
-                yield val
+                yield val,ver
 
     def get_versions(self):
         """ returns a list of acceptable versions; from project - if opened, or `opt_versions` option value
@@ -146,8 +146,8 @@ class Command:
         self._comp_cfgs = comp_cfgs
         self._prefixes = prefixes
 
-        items.sort(key=lambda a:a.lower())
-        compl_text = '\n'.join('{0}\t\t{0}'.format(txt) for txt in items)
+        items = _merge_item_versions(items)
+        compl_text = '\n'.join('{0}\tBootstrap: {1}\t{0}'.format(txt, vers) for txt,vers in items)
         ed_self.complete_alt(compl_text, SNIP_ID, 0)
         return True
 
@@ -222,6 +222,21 @@ def _get_caret_completion_cfg(ed_self, caret):
     spaced_r = class_name_x1 == len(line)  or  line[class_name_x1] in CLASS_SEP
     return CompCfg(word_prefix=prefix, word_range=word_range, attr_range=attr_range,
                     spaced_l=spaced_l, spaced_r=spaced_r)
+
+
+def _merge_item_versions(comp_items):
+    comp_items.sort(key=lambda a: (a[0].lower(), a[1]) )
+    comp_items.append((None, 0)) # last - fake item -- to send last real item in the for loop
+
+    last_s = None
+    vers = []
+    for s,ver in comp_items:
+        if last_s != s  and  last_s:
+            yield (last_s, ' '.join(map(str, vers)))
+            vers.clear()
+
+        last_s = s
+        vers.append(ver)
 
 
 class InvalidCaretException(Exception):
